@@ -104,12 +104,6 @@ func main() {
 		}
 	}()
 
-	//go func() {
-	//	for {
-	//		select {}
-	//	}
-	//}()
-
 	fmt.Println("Started service")
 
 	signal.Notify(c.termChan, syscall.SIGINT, syscall.SIGTERM)
