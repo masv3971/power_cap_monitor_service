@@ -1,0 +1,21 @@
+[Unit]
+Description=Power Cap Monitor Service
+ConditionPathExists=/home/masv/git/power_cap_monitor_service/bin/power_cap_monitor_service
+After=network.target
+ 
+[Service]
+Type=simple
+User=masv
+Group=masv
+LimitNOFILE=1024
+
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=60
+
+WorkingDirectory=/home/masv/git/power_cap_monitor_service
+ExecStart=/home/masv/git/power_cap_monitor_service/bin/power_cap_monitor_service
+KillMode=mixed
+ 
+[Install]
+WantedBy=multi-user.target
