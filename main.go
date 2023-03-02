@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -22,13 +23,11 @@ type values struct {
 type client struct {
 	inFilePath  string
 	outFilePath string
-	inValue     string
+	inValue     int
 	result      string
 	termChan    chan os.Signal
 	ticker      *time.Ticker
 	heartbeat   *time.Ticker
-	values      values
-	results     values
 }
 
 func main() {
@@ -37,18 +36,7 @@ func main() {
 		outFilePath: "/tmp/i3status/power_cap",
 		termChan:    make(chan os.Signal, 1),
 		ticker:      time.NewTicker(4 * time.Second),
-		heartbeat:   time.NewTicker(0 * time.Hour),
-		values: values{
-			high:   "64000000",
-			middle: "15000000",
-			low:    "7500000",
-		},
-		results: values{
-			high:   "H",
-			middle: "M",
-			low:    "L",
-			na:     "N/A",
-		},
+		heartbeat:   time.NewTicker(24 * time.Hour),
 	}
 	fmt.Printf("\nreading from: %q\nwriting to: %q\n", c.inFilePath, c.outFilePath)
 
@@ -65,7 +53,7 @@ func main() {
 		}
 	}()
 
-	fmt.Println("Started service")
+	fmt.Println("Service started")
 
 	signal.Notify(c.termChan, syscall.SIGINT, syscall.SIGTERM)
 	<-c.termChan
@@ -73,11 +61,16 @@ func main() {
 }
 
 func (c *client) loadFile() error {
+	var err error
 	dat, err := os.ReadFile(c.inFilePath)
 	if err != nil {
 		return err
 	}
-	c.inValue = strings.TrimSpace(string(dat))
+	c.inValue, err = strconv.Atoi(strings.TrimSpace(string(dat)))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -105,15 +98,21 @@ func (c *client) writeValueToFile() error {
 }
 
 func (c *client) makeResult() {
-	switch {
-	case c.inValue == c.values.high:
-		c.result = c.results.high
-	case c.inValue == c.values.middle:
-		c.result = c.results.middle
-	case c.inValue == c.values.low:
-		c.result = c.results.low
+	switch c.inValue {
+	case 28000000:
+		c.result = "5"
+	case 8000000:
+		c.result = "4"
+	case 64000000:
+		c.result = "3"
+	case 15000000:
+		c.result = "2"
+	case 7500000:
+		c.result = "1"
 	default:
-		c.result = c.results.na
+		c.result = "0"
+		fmt.Printf("Unknown value: %d",c.inValue)
+
 	}
 }
 
